@@ -1,0 +1,6 @@
+{
+    "cacert": "/etc/local-digital-twins/iothub.crt",
+    "provisioningFile": "/etc/local-digital-twins/provisioning.json",
+    "logFile": "/var/log/local-digital-twins/local-digital-twins.log",
+    "thingsDb": "/var/lib/local-digital-twins/thing.db"
+}

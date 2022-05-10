@@ -1,0 +1,9 @@
+{
+	"localAddress": "tcp://mosquitto:1883",
+	"localUsername": "admin",
+	"localPassword": "admin",
+	"logFile": "",
+	"logLevel": "DEBUG",
+	"deviceId": "set_device_ID",
+	"tenantId": "set_tenant_ID"
+}

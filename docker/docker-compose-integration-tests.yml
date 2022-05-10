@@ -1,0 +1,58 @@
+version: "3.8"
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    networks:
+      - test-net
+      - internet
+    volumes:
+      - type: bind
+        source: ./mosquitto/config
+        target: /mosquitto/config
+        read_only: true
+
+  # Requires valid config.json and provisioning.json file in config folder.
+  twins:
+    build: twins/.
+    networks:
+      - test-net
+      - internet
+    depends_on:
+      - mosquitto
+    volumes:
+      - type: bind
+        source: ../.
+        target: /twins_src
+        read_only: false
+        # Uncomment when for hub integration testing and change tests container's depends_on value to twins.
+        # - provisioning-volume:/build
+
+  tests:
+    environment:
+      - TAGS=${TAGS}
+    build: tests/.
+    networks:
+      - test-net
+      - internet
+    depends_on:
+      - mosquitto
+    volumes:
+      - type: bind
+        source: ../.
+        target: /src
+        read_only: false
+      - type: bind
+        source: ./tests
+        target: /src/target
+        read_only: true
+
+networks:
+  test-net:
+    external: false
+    internal: true
+  internet:
+    external: false
+
+# Uncomment for hub integration testing with integration_hub tag.
+# volumes:
+#  provisioning-volume:
