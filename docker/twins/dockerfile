@@ -1,0 +1,8 @@
+FROM golang:alpine AS build-env
+
+ENV CGO_ENABLED 0
+ENV MQTT_LOG_LEVEL ERROR
+
+WORKDIR /twins_src
+
+ENTRYPOINT ["./docker/twins/run.sh"]

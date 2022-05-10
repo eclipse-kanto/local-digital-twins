@@ -1,0 +1,9 @@
+{
+    "grantType": "client_credentials",
+    "clientId": "Client ID from OAuth2 Client Details, e.g. 424f0011-6789-48c5-mn79-12345ea239e0",
+    "clientSecret": "Client Secret from OAuth2 Client Details, e.g. Q-W9Dtm~hCcPS5GJtWC_0AbCde",
+    "clientScopeThings": "Client Scope from OAuth2 Client Details, e.g. service:iot-things-eu-1:df123456-53d8-4bf1-ba09-6789b6f11aba_things/full-access",
+    "namespace": "namespace",
+    "deviceName": "device_name",
+    "tenantId": "tenant_id"
+}
