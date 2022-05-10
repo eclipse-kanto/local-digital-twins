@@ -27,7 +27,7 @@ func TestInitStorageOnDeviceChange(t *testing.T) {
 	dbDir := "test"
 	location := dbDir + "/TestInitStorageSameDevice.db"
 
-	os.Mkdir(dbDir, 0600)
+	os.Mkdir(dbDir, 0700)
 	require.DirExists(t, dbDir)
 
 	defer func() {
