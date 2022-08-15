@@ -7,7 +7,7 @@ Requires=mosquitto.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/local-digital-twins -configFile /etc/local-digital-twins/config.json
+ExecStart=/usr/bin/local-digital-twins -configFile /etc/local-digital-twins/config.json
 Restart=always
 
 [Install]
