@@ -15,6 +15,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"testing"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -43,7 +44,7 @@ type MessageClient struct {
 
 // NewMessageClient returns a new MessageClient with an initialized testutil.SubscriptionDetails, local MQTT connection
 // and publisher.
-func NewMessageClient() (*MessageClient, error) {
+func NewMessageClient(t *testing.T) (*MessageClient, error) {
 	subsDetails, err := readSubscriptionTestData()
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func NewMessageClient() (*MessageClient, error) {
 		Subscription: subsDetails,
 	}
 
-	logger := testutil.NewLogger("integration", logger.DEBUG)
+	logger := testutil.NewLogger("integration", logger.DEBUG, t)
 	c.logger = logger
 
 	config, err := testutil.NewLocalConfig()

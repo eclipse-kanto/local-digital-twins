@@ -166,7 +166,7 @@ func (l *launcher) Run(
 			honoClient.AddConnectionListener(synchronizeHandler)
 			defer honoClient.RemoveConnectionListener(synchronizeHandler)
 
-			if err := config.LocalConnect(cloudClient, logger); err != nil {
+			if err := config.LocalConnect(context.Background(), cloudClient, logger); err != nil {
 				logger.Error("Cannot connect to local broker", err, nil)
 				app.StopRouter(r)
 				return

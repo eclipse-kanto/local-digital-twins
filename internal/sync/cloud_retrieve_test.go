@@ -55,7 +55,7 @@ func TestCloudRetrieveSuite(t *testing.T) {
 }
 
 func (s *CloudRetrieveSuite) SetupSuite() {
-	sync, err := NewTestCloudRetrieveSynchronizer()
+	sync, err := NewTestCloudRetrieveSynchronizer(s.T())
 	require.NoError(s.T(), err)
 	s.sync = sync
 	addTestThing(s)
@@ -78,7 +78,7 @@ func (s *CloudRetrieveSuite) SetupSuite() {
 		WithStatus(http.StatusOK)
 }
 
-func NewTestCloudRetrieveSynchronizer() (*sync.Synchronizer, error) {
+func NewTestCloudRetrieveSynchronizer(t *testing.T) (*sync.Synchronizer, error) {
 	db, err := persistence.NewThingsDB(dbLocation, testThingID)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func NewTestCloudRetrieveSynchronizer() (*sync.Synchronizer, error) {
 			TenantID: "cloud:retrieve:tenant",
 		},
 		Storage: db,
-		Logger:  testutil.NewLogger("sync", logger.TRACE),
+		Logger:  testutil.NewLogger("sync", logger.TRACE, t),
 	}, nil
 }
 

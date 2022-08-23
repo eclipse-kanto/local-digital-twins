@@ -59,7 +59,7 @@ func (s *SynchronizerSuite) S() *SynchronizerSuite {
 }
 
 func (s *SynchronizerSuite) SetupSuite() {
-	synchronizer, err := NewTestSynchronizer()
+	synchronizer, err := NewTestSynchronizer(s.T())
 	require.NoError(s.T(), err)
 	s.sync = synchronizer
 }
@@ -91,7 +91,7 @@ func (s *SynchronizerSuite) deleteThing() {
 
 }
 
-func NewTestSynchronizer() (*sync.Synchronizer, error) {
+func NewTestSynchronizer(t *testing.T) (*sync.Synchronizer, error) {
 	db, err := persistence.NewThingsDB(dbLocation, syncTestThingID)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func NewTestSynchronizer() (*sync.Synchronizer, error) {
 			TenantID: "tenantID",
 		},
 		Storage: db,
-		Logger:  testutil.NewLogger("sync", logger.TRACE),
+		Logger:  testutil.NewLogger("sync", logger.TRACE, t),
 	}
 	sync.Connected(true)
 	return sync, nil

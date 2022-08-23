@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/ThreeDotsLabs/watermill v1.1.1
-	github.com/eclipse-kanto/suite-connector v0.1.0-M1
+	github.com/eclipse-kanto/suite-connector v0.1.0-M1.0.20220822083435-d47b0a2edf1a
 	github.com/imdario/mergo v0.3.12
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
@@ -27,6 +27,7 @@ require (
 	github.com/lithammer/shortuuid/v3 v3.0.4 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/tevino/abool/v2 v2.0.1 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
