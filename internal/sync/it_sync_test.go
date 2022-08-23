@@ -87,7 +87,7 @@ func (s *SyncSuite) SetupSuite() {
 	require.NoError(s.T(), err)
 	s.test = test
 
-	client, err := testutil.NewMessageClient()
+	client, err := testutil.NewMessageClient(s.T())
 	require.NoError(s.T(), err)
 
 	rootThingName := client.Subscription.DeviceName

@@ -82,7 +82,7 @@ func (s *CommandsSuite) S() *CommandsSuite {
 }
 
 func (s *CommandsSuite) SetupSuite() {
-	handler, err := NewTestHandler(s.provisioning)
+	handler, err := NewTestHandler(s.provisioning, s.T())
 	require.NoError(s.T(), err)
 	s.handler = handler
 }
@@ -103,7 +103,7 @@ func (s *CommandsSuite) TearDownTest() {
 	s.deleteThing()
 }
 
-func NewTestHandler(autoProvisioning bool) (*commands.Handler, error) {
+func NewTestHandler(autoProvisioning bool, t *testing.T) (*commands.Handler, error) {
 	handler := &commands.Handler{}
 	db, err := persistence.NewThingsDB(dbLocation, testThingID)
 	if err != nil {
@@ -119,7 +119,7 @@ func NewTestHandler(autoProvisioning bool) (*commands.Handler, error) {
 	handler.HonoPub = &testPublisher{
 		buffer: list.New(),
 	}
-	handler.Logger = testutil.NewLogger("commands", logger.TRACE)
+	handler.Logger = testutil.NewLogger("commands", logger.TRACE, t)
 	return handler, nil
 }
 

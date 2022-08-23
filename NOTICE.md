@@ -129,6 +129,12 @@ imdario/mergo (0.3.12)
 * Project: https://github.com/imdario/mergo
 * Source:  https://github.com/imdario/mergo/releases/tag/0.3.12
 
+tevino/abool (2.0.1)
+
+* License: MIT License
+* Project: https://github.com/tevino/abool
+* Source:  https://github.com/tevino/abool/releases/tag/v2.0.1
+
 google/go-tpm (0.3.2)
 
 * License: Apache License 2.0
