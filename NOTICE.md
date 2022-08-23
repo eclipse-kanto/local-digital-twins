@@ -123,6 +123,12 @@ natefinch/lumberjack (2.0.0)
 * Project: https://github.com/natefinch/lumberjack
 * Source:  https://github.com/natefinch/lumberjack/releases/tag/v2.0.0
 
+imdario/mergo (0.3.12)
+
+* License: BSD 3-Clause "New" or "Revised" License
+* Project: https://github.com/imdario/mergo
+* Source:  https://github.com/imdario/mergo/releases/tag/0.3.12
+
 google/go-tpm (0.3.2)
 
 * License: Apache License 2.0
@@ -135,29 +141,23 @@ golang.org/x/net (0.0.0-20210405180319-a5a99cb37ef4)
 * Project: https://github.com/golang/net
 * Source:  https://github.com/golang/net/tree/a5a99cb37ef4b68617775ab669177656090ab396
 
+golang.org/x/sync (v0.0.0-20210220032951-036812b2e83c)
+
+* License: BSD 3-Clause "New" or "Revised" License
+* Project: https://github.com/golang/sync
+* Source:  https://github.com/golang/sync/tree/036812b2e83c0ddf193dd5a34e034151da389d09
+
 golang.org/x/sys (0.0.0-20210630005230-0f9fa26af87c)
 
 * License: BSD 3-Clause "New" or "Revised" License
 * Project: https://github.com/golang/sys
 * Source:  https://github.com/golang/sys/tree/0f9fa26af87c481a6877a4ca1330699ba9a30673
 
-imdario/mergo (0.3.12)
-
-* License: BSD 3-Clause "New" or "Revised" License
-* Project: https://github.com/imdario/mergo
-* Source:  https://github.com/imdario/mergo/releases/tag/0.3.12
-
 golang.org/x/time (v0.0.0-20190308202827-9d24e82272b4)
 
 * License: BSD 3-Clause "New" or "Revised" License
 * Project: https://github.com/golang/time
 * Source:  https://github.com/golang/time/tree/9d24e82272b4f38b78bc8cff74fa936d31ccd8ef
-
-golang.org/x/sync (v0.0.0-20210220032951-036812b2e83c)
-
-* License: BSD 3-Clause "New" or "Revised" License
-* Project: https://github.com/golang/sync
-* Source:  https://github.com/golang/sync/tree/036812b2e83c0ddf193dd5a34e034151da389d09
 
 ## Cryptography
 
