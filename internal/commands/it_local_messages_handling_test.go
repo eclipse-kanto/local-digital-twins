@@ -65,7 +65,7 @@ func (s *MessagingSuite) SetupSuite() {
 	t := s.T()
 	var err error
 
-	c, err := testutil.NewMessageClient()
+	c, err := testutil.NewMessageClient(t)
 	require.NoError(t, err)
 
 	thingName := c.Subscription.DeviceName + ":sensor"
