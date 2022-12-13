@@ -193,11 +193,11 @@ func (s *SyncSuite) TearDownSuite() {
 }
 
 // Prerequisites for this test:
-// 1. Either modify test_data.json with your own credentials, or create a new file and embed it in
-//    subscription_details.go
-// 2. Start mosquitto.
-// 3. Place your provisioning.json in the same directory as the local digital twins executable is.
-// 4. Start the twin exe with -localUsername,-localPassword,-deviceId and -tenantId flags.
+//  1. Either modify test_data.json with your own credentials, or create a new file and embed it in
+//     subscription_details.go
+//  2. Start mosquitto.
+//  3. Place your provisioning.json in the same directory as the local digital twins executable is.
+//  4. Start the twin exe with -localUsername,-localPassword,-deviceId and -tenantId flags.
 func (s *SyncSuite) TestHubEdgeSynchronization() {
 	renameProvisioning(false)
 
