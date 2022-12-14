@@ -37,12 +37,13 @@ const (
 
 // Command represents a message entity defined by the Ditto protocol for the Things group that defines the execution of a certain action.
 // This is a special Message that is always bound to a specific Thing instance along with providing the capabilities to configure:
-// - the type of the action it will signal for execution - Create, Modify, Retrieve, Delete
-// - the channel it will be sent - Twin, Live
-// - the entity it will affect - the whole Thing (the default), all features of the Thing (Features),
-//                               a single Feature of the Thing (Feature), all attributes of the Thing (Attributes) or
-//                               a single attribute of the Thing (Attribute), the Thing's policy (PolicyID)
-//                               or the Thing's definition (Definition).
+//   - the type of the action it will signal for execution - Create, Modify, Retrieve, Delete
+//   - the channel it will be sent - Twin, Live
+//   - the entity it will affect - the whole Thing (the default), all features of the Thing (Features),
+//     a single Feature of the Thing (Feature), all attributes of the Thing (Attributes) or
+//     a single attribute of the Thing (Attribute), the Thing's policy (PolicyID)
+//     or the Thing's definition (Definition).
+//
 // Note: Only one action can be configured to the command - if using the methods for configuring it - only the last one applies.
 // Note: Only one channel can be configured to the command - if using the methods for configuring it - only the last one applies.
 // Note: Only one entity that will b affected by the command can be configured - if using the methods for configuring it - only the last one applies.

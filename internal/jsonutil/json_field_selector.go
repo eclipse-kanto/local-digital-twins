@@ -39,24 +39,31 @@ const (
 // for a given fields selector string.
 //
 // Rule example:
-// 1. thingId,attributes/model,attributes/location and
-//    thingId,attributes(model,location), would return the same array:
+//  1. thingId,attributes/model,attributes/location and
+//     thingId,attributes(model,location), would return the same array:
+//
 // [
-//	 /thingId,
-//	 /attributes/model,
-//	 /attributes/location,
+//
+//	/thingId,
+//	/attributes/model,
+//	/attributes/location,
+//
 // ]
 // 2. features/feature1/properties(city,street), would return array:
 // [
-//	 /features/feature1/properties/city,
-//	 /features/feature1/properties/street,
+//
+//	/features/feature1/properties/city,
+//	/features/feature1/properties/street,
+//
 // ]
 // 3. features(feature1/properties,feature1,feature2/properties/country(city,street),feature2),
 // would return array, including only most inner paths:
 // [
-//	 /features/feature1/properties,
-//	 /features/feature2/properties/country/city,
-//	 /features/feature2/properties/country/street,
+//
+//	/features/feature1/properties,
+//	/features/feature2/properties/country/city,
+//	/features/feature2/properties/country/street,
+//
 // ], i.e. features/feature1 and features/feature2 are not returned.
 func SelectorToJSONPointers(selector string) ([]string, error) {
 	if err := validateJSONFieldSelector(selector); err != nil {
@@ -92,12 +99,16 @@ func validateJSONFieldSelector(field string) error {
 // For example:
 // 1. attributes(model,location) would return array:
 // [
-//	 attributes(model,location),
+//
+//	attributes(model,location),
+//
 // ]
 // 2. thingId,features/someFeature/properties(city/postCode,street) would return array:
 // [
-//	 thingId,
-//	 features/someFeature/properties(city/postCode,street),
+//
+//	thingId,
+//	features/someFeature/properties(city/postCode,street),
+//
 // ]
 func innerSelectors(parent string) []string {
 	if err := validateJSONFieldSelector(parent); err != nil {
