@@ -28,11 +28,10 @@ type ProvisioningCommandsSuite struct {
 }
 
 func TestProvisioningCommandsSuite(t *testing.T) {
-	base := &CommandsSuite{
-		provisioning: true,
-	}
 	suite.Run(t, &ProvisioningCommandsSuite{
-		*base,
+		CommandsSuite{
+			provisioning: true,
+		},
 	})
 }
 
