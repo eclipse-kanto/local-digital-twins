@@ -166,6 +166,12 @@ golang.org/x/time (v0.0.0-20190308202827-9d24e82272b4)
 * Project: https://github.com/golang/time
 * Source:  https://github.com/golang/time/tree/9d24e82272b4f38b78bc8cff74fa936d31ccd8ef
 
+go.etcd.io/bbolt (1.3.6)
+
+* License: MIT License
+* Project: https://github.com/etcd-io/bbolt
+* Source: https://github.com/etcd-io/bbolt/releases/tag/v1.3.6
+
 ## Cryptography
 
 Content may contain encryption software. The country in which you are currently
