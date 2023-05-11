@@ -20,12 +20,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/eclipse/ditto-clients-golang/model"
 	"github.com/eclipse/ditto-clients-golang/protocol"
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type ldtThingSuite struct {
@@ -55,11 +54,7 @@ func (suite *ldtThingSuite) TestEventModifyOrCreateThing() {
 	thing.WithID(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID))
 	thing.WithPolicyIDFrom(suite.ldtTestConfiguration.PolicyId)
 
-	tests := map[string]struct {
-		command        *things.Command
-		expectedTopic  string
-		beforeFunction func()
-	}{
+	tests := map[string]ldtTestCaseData{
 		"test_modify_thing": {
 			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Modify(thing),
 			expectedTopic: suite.twinEventTopicModified,
@@ -67,18 +62,12 @@ func (suite *ldtThingSuite) TestEventModifyOrCreateThing() {
 		"test_create_thing": {
 			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Create(thing),
 			expectedTopic: suite.twinEventTopicCreated,
-			beforeFunction: func() {
-				cmd := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Delete()
-				msg := cmd.Envelope(protocol.WithResponseRequired(false))
-				err := suite.DittoClient.Send(msg)
-				require.NoError(suite.T(), err, "removed test thing")
-			},
 		},
 	}
 	for testName, testCase := range tests {
 		suite.Run(testName, func() {
-			if testCase.beforeFunction != nil {
-				testCase.beforeFunction()
+			if testCase.command.Topic.Action == protocol.ActionCreate {
+				suite.removeTestThing()
 			}
 			suite.executeCommand("e", suite.messagesFilter, thing, testCase.command, suite.expectedPath, testCase.expectedTopic)
 			b, _ := json.Marshal(thing)

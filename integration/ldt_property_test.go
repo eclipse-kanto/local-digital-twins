@@ -22,10 +22,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/eclipse/ditto-clients-golang/model"
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
+	"github.com/stretchr/testify/suite"
 )
 
 type ldtPropertySuite struct {
@@ -51,33 +50,23 @@ func TestPropertySuite(t *testing.T) {
 }
 
 func (suite *ldtPropertySuite) TestEventModifyOrCreateProperty() {
-	tests := map[string]struct {
-		command        *things.Command
-		expectedTopic  string
-		beforeFunction func()
-	}{
+	tests := map[string]ldtTestCaseData{
 		"test_create_property": {
 			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().FeatureProperty(featureID, property).Modify(value),
 			expectedTopic: suite.twinEventTopicCreated,
-			beforeFunction: func() {
-				suite.createTestFeature(emptyFeature, featureID)
-			},
+			feature:       emptyFeature,
 		},
 
 		"test_modify_property": {
 			command: things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().
 				FeatureProperty(featureID, property).Modify(value),
 			expectedTopic: suite.twinEventTopicModified,
-			beforeFunction: func() {
-				suite.createTestFeature(featureWithProperties, featureID)
-			},
+			feature:       featureWithProperties,
 		},
 	}
 	for testName, testCase := range tests {
 		suite.Run(testName, func() {
-			if testCase.beforeFunction != nil {
-				testCase.beforeFunction()
-			}
+			suite.createTestFeature(testCase.feature, featureID)
 			suite.executeCommand("e", suite.messagesFilter, value, testCase.command, suite.expectedPath, testCase.expectedTopic)
 			b, _ := json.Marshal(value)
 			body, err := suite.getPropertyOfFeature(featureID, property)

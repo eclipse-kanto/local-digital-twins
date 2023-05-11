@@ -22,10 +22,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/eclipse/ditto-clients-golang/model"
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
+	"github.com/stretchr/testify/suite"
 )
 
 type ldtDesiredPropertiesSuite struct {
@@ -52,33 +51,24 @@ func TestDesiredPropertiesSuite(t *testing.T) {
 
 func (suite *ldtDesiredPropertiesSuite) TestEventModifyOrCreateDesiredProperties() {
 	properties := map[string]interface{}{desiredProperty: value}
-	tests := map[string]struct {
-		command        *things.Command
-		expectedTopic  string
-		beforeFunction func()
-	}{
+	tests := map[string]ldtTestCaseData{
 		"test_create_desired_properties": {
 			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().FeatureDesiredProperties(featureID).Modify(properties),
 			expectedTopic: suite.twinEventTopicCreated,
-			beforeFunction: func() {
-				suite.createTestFeature(emptyFeature, featureID)
-			},
+			feature:       emptyFeature,
 		},
 
 		"test_modify_desired_properties": {
 			command: things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().
 				FeatureDesiredProperties(featureID).Modify(properties),
 			expectedTopic: suite.twinEventTopicModified,
-			beforeFunction: func() {
-				suite.createTestFeature(featureWithDesiredProperties, featureID)
-			},
+			feature:       featureWithDesiredProperties,
 		},
 	}
+
 	for testName, testCase := range tests {
 		suite.Run(testName, func() {
-			if testCase.beforeFunction != nil {
-				testCase.beforeFunction()
-			}
+			suite.createTestFeature(testCase.feature, featureID)
 			suite.executeCommand("e", suite.messagesFilter, properties, testCase.command, suite.expectedPath, testCase.expectedTopic)
 			b, _ := json.Marshal(properties)
 			body, err := suite.getAllDesiredPropertiesOfFeature(featureID)
@@ -99,5 +89,4 @@ func (suite *ldtDesiredPropertiesSuite) TestEventDeleteDesiredProperties() {
 	body, err := suite.getAllDesiredPropertiesOfFeature(featureID)
 	require.Error(suite.T(), err, "desired properties of feature should have been deleted")
 	assert.Nil(suite.T(), body, "body should be nil")
-
 }

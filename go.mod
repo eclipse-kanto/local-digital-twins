@@ -5,7 +5,10 @@ go 1.17
 require (
 	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/ThreeDotsLabs/watermill v1.1.1
+	github.com/caarlos0/env/v6 v6.10.1
+	github.com/eclipse-kanto/kanto/integration/util v0.0.0-20230323152903-9d6570b21206
 	github.com/eclipse-kanto/suite-connector v0.1.0-M2.0.20230222081206-577d4deaa329
+	github.com/eclipse/ditto-clients-golang v0.0.0-20220225085802-cf3b306280d3
 	github.com/imdario/mergo v0.3.12
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
@@ -16,7 +19,6 @@ require (
 require (
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/eclipse/ditto-clients-golang v0.0.0-20220225085802-cf3b306280d3 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.4.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/google/go-tpm v0.3.2 // indirect

@@ -17,6 +17,9 @@ package integration
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"reflect"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/eclipse-kanto/kanto/integration/util"
 	"github.com/eclipse/ditto-clients-golang/model"
@@ -24,8 +27,6 @@ import (
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"net/http"
-	"reflect"
 )
 
 type ldtTestConfiguration struct {
@@ -33,6 +34,12 @@ type ldtTestConfiguration struct {
 	StatusReadySinceTimeDeltaMs int    `env:"SCT_STATUS_READY_SINCE_TIME_DELTA_MS" envDefault:"0"`
 	StatusRetryIntervalMs       int    `env:"SCT_STATUS_RETRY_INTERVAL_MS" envDefault:"2000"`
 	PolicyId                    string `env:"POLICY_ID"`
+}
+
+type ldtTestCaseData struct {
+	command       *things.Command
+	expectedTopic string
+	feature       *model.Feature
 }
 
 type localDigitalTwinsSuite struct {
@@ -121,33 +128,31 @@ func convertValueToJSON(value interface{}) map[string]interface{} {
 	return jsonValue
 }
 
+func (suite *localDigitalTwinsSuite) sendDittoCommand(command *things.Command) {
+	msg := command.Envelope(protocol.WithResponseRequired(false))
+	err := suite.DittoClient.Send(msg)
+	require.NoError(suite.T(), err, "command failed")
+}
+
 func (suite *localDigitalTwinsSuite) createTestFeature(feature *model.Feature, featureID string) {
 	cmd := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Feature(featureID).
 		Modify(feature)
-	msg := cmd.Envelope(protocol.WithResponseRequired(false))
-	err := suite.DittoClient.Send(msg)
-	require.NoError(suite.T(), err, "creation of test feature failed")
+	suite.sendDittoCommand(cmd)
 }
 
 func (suite *localDigitalTwinsSuite) createTestThing(thing *model.Thing) {
 	cmd := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Create(thing)
-	msg := cmd.Envelope(protocol.WithResponseRequired(false))
-	err := suite.DittoClient.Send(msg)
-	require.NoError(suite.T(), err, "creation of test thing failed")
+	suite.sendDittoCommand(cmd)
 }
 
 func (suite *localDigitalTwinsSuite) removeTestFeatures() {
 	cmd := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Features().Delete()
-	msg := cmd.Envelope(protocol.WithResponseRequired(false))
-	err := suite.DittoClient.Send(msg)
-	require.NoError(suite.T(), err, "removal of test features failed")
+	suite.sendDittoCommand(cmd)
 }
 
 func (suite *localDigitalTwinsSuite) removeTestThing() {
 	cmd := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Delete()
-	msg := cmd.Envelope(protocol.WithResponseRequired(false))
-	err := suite.DittoClient.Send(msg)
-	require.NoError(suite.T(), err, "removal of test thing failed")
+	suite.sendDittoCommand(cmd)
 }
 
 func (suite *localDigitalTwinsSuite) executeCommand(topic string, filter string, newValue interface{}, command *things.Command, expectedPath string, expectedTopic string) {
