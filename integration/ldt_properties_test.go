@@ -1,0 +1,88 @@
+// Copyright (c) 2023 Contributors to the Eclipse Foundation
+//
+// See the NOTICE file(s) distributed with this work for additional
+// information regarding copyright ownership.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+
+//go:build integration
+
+package integration
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"strings"
+	"testing"
+
+	"github.com/eclipse/ditto-clients-golang/model"
+	"github.com/eclipse/ditto-clients-golang/protocol/things"
+	"github.com/stretchr/testify/suite"
+)
+
+type ldtPropertiesSuite struct {
+	localDigitalTwinsSuite
+
+	messagesFilter string
+	expectedPath   string
+}
+
+func (suite *ldtPropertiesSuite) SetupSuite() {
+	suite.SetupLdtSuite()
+	suite.messagesFilter = fmt.Sprintf("like(resource:path,'/features/%s/properties')", featureID)
+	suite.expectedPath = fmt.Sprintf("/features/%s/properties", featureID)
+}
+
+func (suite *ldtPropertiesSuite) TearDownSuite() {
+	suite.TearDownLdtSuite()
+	suite.TearDown()
+}
+
+func TestPropertiesSuite(t *testing.T) {
+	suite.Run(t, new(ldtPropertiesSuite))
+}
+
+func (suite *ldtPropertiesSuite) TestEventModifyOrCreateProperties() {
+	properties := map[string]interface{}{property: value}
+	tests := map[string]ldtTestCaseData{
+		"test_create_properties": {
+			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().FeatureProperties(featureID).Modify(properties),
+			expectedTopic: suite.twinEventTopicCreated,
+			feature:       emptyFeature,
+		},
+
+		"test_modify_properties": {
+			command: things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().
+				FeatureProperties(featureID).Modify(properties),
+			expectedTopic: suite.twinEventTopicModified,
+			feature:       featureWithProperties,
+		},
+	}
+	for testName, testCase := range tests {
+		suite.Run(testName, func() {
+			suite.createTestFeature(testCase.feature, featureID)
+			suite.executeCommand("e", suite.messagesFilter, properties, testCase.command, suite.expectedPath, testCase.expectedTopic)
+			b, _ := json.Marshal(properties)
+			body, err := suite.getAllPropertiesOfFeature(featureID)
+			require.NoError(suite.T(), err, "unable to get properties")
+			assert.Equal(suite.T(), string(b), strings.TrimSpace(string(body)), "properties don't match")
+			suite.removeTestFeatures()
+		})
+	}
+}
+func (suite *ldtPropertiesSuite) TestEventDeleteProperties() {
+	command := things.NewCommand(suite.namespacedID).Twin().FeatureProperties(featureID).Delete()
+	expectedTopic := suite.twinEventTopicDeleted
+	suite.createTestFeature(featureWithProperties, featureID)
+	suite.executeCommand("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
+	body, err := suite.getAllPropertiesOfFeature(featureID)
+	require.Error(suite.T(), err, "properties should have been deleted")
+	assert.Nil(suite.T(), body, "body should be nil")
+}
