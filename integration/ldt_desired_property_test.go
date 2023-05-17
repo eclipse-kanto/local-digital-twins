@@ -67,7 +67,7 @@ func (suite *ldtDesiredPropertySuite) TestEventModifyOrCreateProperty() {
 	for testName, testCase := range tests {
 		suite.Run(testName, func() {
 			suite.createTestFeature(testCase.feature, featureID)
-			suite.executeCommand("e", suite.messagesFilter, value, testCase.command, suite.expectedPath, testCase.expectedTopic)
+			suite.executeCommandEvent("e", suite.messagesFilter, value, testCase.command, suite.expectedPath, testCase.expectedTopic)
 			b, _ := json.Marshal(value)
 			body, err := suite.getDesiredPropertyOfFeature(featureID, desiredProperty)
 			require.NoError(suite.T(), err, "unable to get property")
@@ -82,10 +82,56 @@ func (suite *ldtDesiredPropertySuite) TestEventDeleteDesiredProperty() {
 	expectedTopic := suite.twinEventTopicDeleted
 
 	suite.createTestFeature(featureWithDesiredProperties, featureID)
-	suite.executeCommand("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
+	suite.executeCommandEvent("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
 
 	body, err := suite.getDesiredPropertyOfFeature(featureID, desiredProperty)
 	require.Error(suite.T(), err, fmt.Sprintf("Desired property with key: '%s' should have been deleted", desiredProperty))
 	assert.Nil(suite.T(), body, "body should be nil")
 
+}
+
+func (suite *ldtDesiredPropertySuite) TestCommandResponseModifyOrCreateDesiredProperty() {
+	tests := map[string]ldtTestCaseData{
+		"test_create_desired_property": {
+			command:            things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().FeatureDesiredProperty(featureID, desiredProperty).Modify(value),
+			expectedStatusCode: 201,
+			feature:            emptyFeature,
+		},
+
+		"test_modify_desired_property": {
+			command: things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().
+				FeatureDesiredProperty(featureID, desiredProperty).Modify(value),
+			expectedStatusCode: 204,
+			feature:            featureWithDesiredProperties,
+		},
+	}
+	for testName, testCase := range tests {
+		suite.Run(testName, func() {
+			suite.createTestFeature(testCase.feature, featureID)
+			response, err := suite.executeCommandResponse(testCase.command)
+			require.NoError(suite.T(), err, "could not get response")
+			assert.Equal(suite.T(), testCase.expectedStatusCode, response.Status, "unexpected status code")
+			suite.removeTestFeatures()
+		})
+	}
+}
+
+func (suite *ldtDesiredPropertySuite) TestCommandResponseDeleteDesiredProperty() {
+	command := things.NewCommand(suite.namespacedID).FeatureDesiredProperty(featureID, desiredProperty).Delete()
+	suite.createTestFeature(featureWithDesiredProperties, featureID)
+	response, err := suite.executeCommandResponse(command)
+	require.NoError(suite.T(), err, "could not get response")
+	assert.Equal(suite.T(), 204, response.Status, "unexpected status code")
+
+}
+
+func (suite *ldtDesiredPropertySuite) TestCommandResponseRetrieveDesiredProperty() {
+	command := things.NewCommand(suite.namespacedID).FeatureDesiredProperty(featureID, desiredProperty).Retrieve()
+	suite.createTestFeature(featureWithDesiredProperties, featureID)
+	response, err := suite.executeCommandResponse(command)
+	require.NoError(suite.T(), err, "could not get response")
+	assert.Equal(suite.T(), 200, response.Status, "unexpected status code")
+	body, _ := suite.getDesiredPropertyOfFeature(featureID, desiredProperty)
+	b, _ := json.Marshal(response.Value)
+	assert.Equal(suite.T(), string(b), strings.TrimSpace(string(body)))
 }

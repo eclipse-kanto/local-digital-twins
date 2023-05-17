@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"strings"
+	"reflect"
 	"testing"
 
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
@@ -69,11 +69,14 @@ func (suite *ldtFeatureSuite) TestEventModifyOrCreateFeature() {
 			if testCase.feature != nil {
 				suite.createTestFeature(testCase.feature, featureID)
 			}
-			suite.executeCommand("e", suite.messagesFilter, emptyFeature, testCase.command, suite.expectedPath, testCase.expectedTopic)
-			b, _ := json.Marshal(emptyFeature)
-			body, err := suite.getFeature(featureID)
+			suite.executeCommandEvent("e", suite.messagesFilter, emptyFeature, testCase.command, suite.expectedPath, testCase.expectedTopic)
+			expectedBody, _ := json.Marshal(emptyFeature)
+			actualBody, err := suite.getFeature(featureID)
 			require.NoError(suite.T(), err, "unable to get feature")
-			assert.Equal(suite.T(), string(b), strings.TrimSpace(string(body)), "feature doesn't match")
+
+			expectedMap := suite.convertToMap(expectedBody)
+			actualMap := suite.convertToMap(actualBody)
+			assert.True(suite.T(), reflect.DeepEqual(expectedMap, actualMap))
 			suite.removeTestFeatures()
 		})
 	}
@@ -84,9 +87,56 @@ func (suite *ldtFeatureSuite) TestEventDeleteFeature() {
 	expectedTopic := suite.twinEventTopicDeleted
 
 	suite.createTestFeature(emptyFeature, featureID)
-	suite.executeCommand("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
+	suite.executeCommandEvent("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
 
 	body, err := suite.getFeature(featureID)
 	require.Error(suite.T(), err, "feature should have been deleted")
 	assert.Nil(suite.T(), body, "body should be nil")
+}
+
+func (suite *ldtFeatureSuite) TestCommandResponseModifyOrCreateFeature() {
+	tests := map[string]ldtTestCaseData{
+		"test_create_feature": {
+			command: things.NewCommand(suite.namespacedID).Twin().
+				Feature(featureID).Modify(emptyFeature), expectedStatusCode: 201,
+		},
+
+		"test_modify_feature": {
+			command: things.NewCommand(suite.namespacedID).Twin().
+				Feature(featureID).Modify(emptyFeature),
+			expectedStatusCode: 204,
+			feature:            emptyFeature,
+		},
+	}
+	for testName, testCase := range tests {
+		suite.Run(testName, func() {
+			if testCase.feature != nil {
+				suite.createTestFeature(testCase.feature, featureID)
+			}
+			response, err := suite.executeCommandResponse(testCase.command)
+			require.NoError(suite.T(), err, "could not get response")
+			assert.Equal(suite.T(), testCase.expectedStatusCode, response.Status, "unexpected status code")
+			suite.removeTestFeatures()
+		})
+	}
+}
+
+func (suite *ldtFeatureSuite) TestCommandResponseDeleteFeature() {
+	command := things.NewCommand(suite.namespacedID).Feature(featureID).Delete()
+	suite.createTestFeature(emptyFeature, featureID)
+	response, err := suite.executeCommandResponse(command)
+	require.NoError(suite.T(), err, "could not get response")
+	assert.Equal(suite.T(), 204, response.Status, "unexpected status code")
+}
+
+func (suite *ldtFeatureSuite) TestCommandResponseRetrieveFeature() {
+	command := things.NewCommand(suite.namespacedID).Feature(featureID).Retrieve()
+	suite.createTestFeature(emptyFeature, featureID)
+	response, err := suite.executeCommandResponse(command)
+	require.NoError(suite.T(), err, "could not get response")
+	assert.Equal(suite.T(), 200, response.Status, "unexpected status code")
+	actualBody, _ := suite.getFeature(featureID)
+	require.NoError(suite.T(), err, "unable to get feature")
+	actualMap := suite.convertToMap(actualBody)
+	assert.True(suite.T(), reflect.DeepEqual(response.Value, actualMap))
 }

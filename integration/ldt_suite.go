@@ -16,9 +16,12 @@ package integration
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/eclipse-kanto/kanto/integration/util"
@@ -37,9 +40,10 @@ type ldtTestConfiguration struct {
 }
 
 type ldtTestCaseData struct {
-	command       *things.Command
-	expectedTopic string
-	feature       *model.Feature
+	command            *things.Command
+	expectedTopic      string
+	feature            *model.Feature
+	expectedStatusCode int
 }
 
 type localDigitalTwinsSuite struct {
@@ -128,6 +132,13 @@ func convertValueToJSON(value interface{}) map[string]interface{} {
 	return jsonValue
 }
 
+func (suite *localDigitalTwinsSuite) convertToMap(bytes []byte) map[string]interface{} {
+	mappedResponse := make(map[string]interface{})
+	err := json.Unmarshal(bytes, &mappedResponse)
+	require.NoError(suite.T(), err, "could not unmarshal")
+	return mappedResponse
+}
+
 func (suite *localDigitalTwinsSuite) sendDittoCommand(command *things.Command) {
 	msg := command.Envelope(protocol.WithResponseRequired(false))
 	err := suite.DittoClient.Send(msg)
@@ -155,7 +166,7 @@ func (suite *localDigitalTwinsSuite) removeTestThing() {
 	suite.sendDittoCommand(cmd)
 }
 
-func (suite *localDigitalTwinsSuite) executeCommand(topic string, filter string, newValue interface{}, command *things.Command, expectedPath string, expectedTopic string) {
+func (suite *localDigitalTwinsSuite) executeCommandEvent(topic string, filter string, newValue interface{}, command *things.Command, expectedPath string, expectedTopic string) {
 	ws, err := util.NewDigitalTwinWSConnection(suite.Cfg)
 	require.NoError(suite.T(), err, "cannot create a websocket connection to the backend")
 	defer ws.Close()
@@ -185,4 +196,32 @@ func (suite *localDigitalTwinsSuite) executeCommand(topic string, filter string,
 		return false, fmt.Errorf("unexpected value: %s", msg.Value)
 	})
 	require.NoError(suite.T(), result, "event should be received")
+}
+
+func (suite *localDigitalTwinsSuite) executeCommandResponse(command *things.Command) (*protocol.Envelope, error) {
+	correlationId, _ := uuid.NewRandom()
+	msg := command.Envelope(protocol.WithResponseRequired(true), protocol.WithCorrelationID(correlationId.String()))
+	err := util.SendMQTTMessage(suite.Cfg, suite.MQTTClient, "e", msg)
+	require.NoError(suite.T(), err, "unable to send event to the backend")
+	done := make(chan *protocol.Envelope)
+	dittoHandler := func(requestID string, msg *protocol.Envelope) {
+
+		if msg.Headers.CorrelationID() == correlationId.String() && msg.Topic.Action == protocol.ActionRetrieve && msg.Topic.String() == command.Topic.String() {
+			done <- msg
+		}
+		if msg.Headers.CorrelationID() == correlationId.String() && msg.Headers.Originator() != "" && msg.Topic.String() == command.Topic.String() {
+			done <- msg
+		}
+
+	}
+	suite.DittoClient.Subscribe(dittoHandler)
+	defer suite.DittoClient.Unsubscribe(dittoHandler)
+
+	select {
+	case response := <-done:
+		return response, nil
+	case <-time.After(30 * time.Second):
+		return nil, errors.New("response timeout")
+	}
+
 }

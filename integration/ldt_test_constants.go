@@ -29,4 +29,6 @@ var (
 	emptyFeature                 = &model.Feature{}
 	featureWithDesiredProperties = (&model.Feature{}).WithDesiredProperty(desiredProperty, value)
 	featureWithProperties        = (&model.Feature{}).WithProperty(property, value)
+	properties                   = map[string]interface{}{desiredProperty: value}
+	features                     = map[string]*model.Feature{featureID: emptyFeature}
 )
