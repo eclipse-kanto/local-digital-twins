@@ -17,10 +17,11 @@ package integration
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/eclipse/ditto-clients-golang/model"
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
@@ -72,18 +73,14 @@ func (suite *ldtPropertiesSuite) TestEventModifyOrCreateProperties() {
 			actualBody, err := suite.getAllPropertiesOfFeature(featureID)
 			require.NoError(suite.T(), err, "unable to get properties")
 
-			expectedMap := suite.convertToMap(expectedBody)
-			actualMap := suite.convertToMap(actualBody)
-			assert.True(suite.T(), reflect.DeepEqual(expectedMap, actualMap))
+			assert.True(suite.T(), reflect.DeepEqual(suite.convertToMap(expectedBody), suite.convertToMap(actualBody)))
 			suite.removeTestFeatures()
 		})
 	}
 }
 func (suite *ldtPropertiesSuite) TestEventDeleteProperties() {
-	command := things.NewCommand(suite.namespacedID).Twin().FeatureProperties(featureID).Delete()
-	expectedTopic := suite.twinEventTopicDeleted
 	suite.createTestFeature(featureWithProperties, featureID)
-	suite.executeCommandEvent("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
+	suite.executeCommandEvent("e", suite.messagesFilter, nil, things.NewCommand(suite.namespacedID).Twin().FeatureProperties(featureID).Delete(), suite.expectedPath, suite.twinEventTopicDeleted)
 	body, err := suite.getAllPropertiesOfFeature(featureID)
 	require.Error(suite.T(), err, "properties should have been deleted")
 	assert.Nil(suite.T(), body, "body should be nil")
@@ -116,21 +113,18 @@ func (suite *ldtPropertiesSuite) TestCommandResponseModifyOrCreateProperties() {
 }
 
 func (suite *ldtPropertiesSuite) TestCommandResponseDeleteProperties() {
-	command := things.NewCommand(suite.namespacedID).FeatureProperties(featureID).Delete()
 	suite.createTestFeature(featureWithProperties, featureID)
-	response, err := suite.executeCommandResponse(command)
+	response, err := suite.executeCommandResponse(things.NewCommand(suite.namespacedID).FeatureProperties(featureID).Delete())
 	require.NoError(suite.T(), err, "could not get response")
 	assert.Equal(suite.T(), 204, response.Status, "unexpected status code")
 }
 
 func (suite *ldtPropertiesSuite) TestCommandResponseRetrieveProperties() {
-	command := things.NewCommand(suite.namespacedID).FeatureProperties(featureID).Retrieve()
 	suite.createTestFeature(featureWithProperties, featureID)
-	response, err := suite.executeCommandResponse(command)
+	response, err := suite.executeCommandResponse(things.NewCommand(suite.namespacedID).FeatureProperties(featureID).Retrieve())
 	require.NoError(suite.T(), err, "could not get response")
 	assert.Equal(suite.T(), 200, response.Status, "unexpected status code")
-	actualBody, _ := suite.getAllPropertiesOfFeature(featureID)
+	actualBody, err := suite.getAllPropertiesOfFeature(featureID)
 	require.NoError(suite.T(), err, "unable to get properties")
-	actualMap := suite.convertToMap(actualBody)
-	assert.True(suite.T(), reflect.DeepEqual(response.Value, actualMap))
+	assert.True(suite.T(), reflect.DeepEqual(response.Value, suite.convertToMap(actualBody)))
 }

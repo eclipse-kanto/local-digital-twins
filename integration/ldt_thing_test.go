@@ -16,13 +16,13 @@ package integration
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 
 	"github.com/eclipse/ditto-clients-golang/model"
 	"github.com/eclipse/ditto-clients-golang/protocol"
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -70,21 +70,19 @@ func (suite *ldtThingSuite) TestEventModifyOrCreateThing() {
 				suite.removeTestThing()
 			}
 			suite.executeCommandEvent("e", suite.messagesFilter, suite.thing, testCase.command, suite.expectedPath, testCase.expectedTopic)
-			expectedBody, _ := json.Marshal(suite.thing)
+			expectedBody, err := json.Marshal(suite.thing)
+			require.NoError(suite.T(), err, "unable to marshal the expected body")
+
 			actualBody, err := suite.getThing()
 			require.NoError(suite.T(), err, "unable to get thing")
 
-			expectedMap := suite.convertToMap(expectedBody)
-			actualMap := suite.convertToMap(actualBody)
-			assert.True(suite.T(), reflect.DeepEqual(expectedMap, actualMap))
+			assert.True(suite.T(), reflect.DeepEqual(suite.convertToMap(expectedBody), suite.convertToMap(actualBody)))
 		})
 	}
 }
 
 func (suite *ldtThingSuite) TestEventDeleteThing() {
-	command := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Delete()
-	expectedTopic := suite.twinEventTopicDeleted
-	suite.executeCommandEvent("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
+	suite.executeCommandEvent("e", suite.messagesFilter, nil, things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Delete(), suite.expectedPath, suite.twinEventTopicDeleted)
 	body, err := suite.getThing()
 	require.Error(suite.T(), err, "thing should have been deleted")
 	assert.Nil(suite.T(), body, "body should be nil")
@@ -117,20 +115,17 @@ func (suite *ldtThingSuite) TestCommandResponseModifyOrCreateThing() {
 }
 
 func (suite *ldtThingSuite) TestCommandResponseDeleteThing() {
-	command := things.NewCommand(suite.namespacedID).Delete()
-	response, err := suite.executeCommandResponse(command)
+	response, err := suite.executeCommandResponse(things.NewCommand(suite.namespacedID).Delete())
 	require.NoError(suite.T(), err, "could not get response")
 	assert.Equal(suite.T(), 204, response.Status, "unexpected status code")
 	suite.createTestThing(suite.thing)
 }
 
 func (suite *ldtThingSuite) TestCommandResponseRetrieveThing() {
-	command := things.NewCommand(suite.namespacedID).Retrieve()
-	response, err := suite.executeCommandResponse(command)
+	response, err := suite.executeCommandResponse(things.NewCommand(suite.namespacedID).Retrieve())
 	require.NoError(suite.T(), err, "could not get response")
 	assert.Equal(suite.T(), 200, response.Status, "unexpected status code")
 	actualBody, err := suite.getThing()
 	require.NoError(suite.T(), err, "unable to get thing")
-	actualMap := suite.convertToMap(actualBody)
-	assert.True(suite.T(), reflect.DeepEqual(response.Value, actualMap))
+	assert.True(suite.T(), reflect.DeepEqual(response.Value, suite.convertToMap(actualBody)))
 }
