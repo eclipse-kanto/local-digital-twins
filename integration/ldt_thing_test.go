@@ -16,13 +16,13 @@ package integration
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"strings"
+	"reflect"
 	"testing"
 
 	"github.com/eclipse/ditto-clients-golang/model"
 	"github.com/eclipse/ditto-clients-golang/protocol"
 	"github.com/eclipse/ditto-clients-golang/protocol/things"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -30,6 +30,7 @@ import (
 type ldtThingSuite struct {
 	localDigitalTwinsSuite
 
+	thing          *model.Thing
 	messagesFilter string
 	expectedPath   string
 }
@@ -38,6 +39,8 @@ func (suite *ldtThingSuite) SetupSuite() {
 	suite.SetupLdtSuite()
 	suite.messagesFilter = "like(resource:path,'/')"
 	suite.expectedPath = "/"
+
+	suite.thing = (&model.Thing{}).WithID(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).WithPolicyIDFrom(suite.ldtTestConfiguration.PolicyId)
 }
 
 func (suite *ldtThingSuite) TearDownSuite() {
@@ -50,17 +53,14 @@ func TestThingSuite(t *testing.T) {
 }
 
 func (suite *ldtThingSuite) TestEventModifyOrCreateThing() {
-	thing := &model.Thing{}
-	thing.WithID(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID))
-	thing.WithPolicyIDFrom(suite.ldtTestConfiguration.PolicyId)
 
 	tests := map[string]ldtTestCaseData{
 		"test_modify_thing": {
-			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Modify(thing),
+			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Modify(suite.thing),
 			expectedTopic: suite.twinEventTopicModified,
 		},
 		"test_create_thing": {
-			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Create(thing),
+			command:       things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Create(suite.thing),
 			expectedTopic: suite.twinEventTopicCreated,
 		},
 	}
@@ -69,25 +69,63 @@ func (suite *ldtThingSuite) TestEventModifyOrCreateThing() {
 			if testCase.command.Topic.Action == protocol.ActionCreate {
 				suite.removeTestThing()
 			}
-			suite.executeCommand("e", suite.messagesFilter, thing, testCase.command, suite.expectedPath, testCase.expectedTopic)
-			b, _ := json.Marshal(thing)
-			body, err := suite.getThing()
+			suite.executeCommandEvent("e", suite.messagesFilter, suite.thing, testCase.command, suite.expectedPath, testCase.expectedTopic)
+			expectedBody, err := json.Marshal(suite.thing)
+			require.NoError(suite.T(), err, "unable to marshal the expected body")
+
+			actualBody, err := suite.getThing()
 			require.NoError(suite.T(), err, "unable to get thing")
-			assert.Equal(suite.T(), string(b), strings.TrimSpace(string(body)), "thing updated")
+
+			assert.True(suite.T(), reflect.DeepEqual(suite.convertToMap(expectedBody), suite.convertToMap(actualBody)))
 		})
 	}
 }
 
 func (suite *ldtThingSuite) TestEventDeleteThing() {
-	thing := &model.Thing{}
-	thing.WithID(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID))
-	thing.WithPolicyIDFrom(suite.ldtTestConfiguration.PolicyId)
-	command := things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Delete()
-	expectedTopic := suite.twinEventTopicDeleted
-	suite.executeCommand("e", suite.messagesFilter, nil, command, suite.expectedPath, expectedTopic)
+	suite.executeCommandEvent("e", suite.messagesFilter, nil, things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Delete(), suite.expectedPath, suite.twinEventTopicDeleted)
 	body, err := suite.getThing()
 	require.Error(suite.T(), err, "thing should have been deleted")
 	assert.Nil(suite.T(), body, "body should be nil")
 
-	suite.createTestThing(thing)
+	suite.createTestThing(suite.thing)
+}
+
+func (suite *ldtThingSuite) TestCommandResponseModifyOrCreateThing() {
+	tests := map[string]ldtTestCaseData{
+		"test_create_thing": {
+			command:            things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Create(suite.thing),
+			expectedStatusCode: 201,
+		},
+
+		"test_modify_thing": {
+			command:            things.NewCommand(model.NewNamespacedIDFrom(suite.ThingCfg.DeviceID)).Twin().Modify(suite.thing),
+			expectedStatusCode: 204,
+		},
+	}
+	for testName, testCase := range tests {
+		suite.Run(testName, func() {
+			if testCase.command.Topic.Action == protocol.ActionCreate {
+				suite.removeTestThing()
+			}
+			response, err := suite.executeCommandResponse(testCase.command)
+			require.NoError(suite.T(), err, "could not get response")
+			assert.Equal(suite.T(), testCase.expectedStatusCode, response.Status, "unexpected status code")
+		})
+	}
+}
+
+func (suite *ldtThingSuite) TestCommandResponseDeleteThing() {
+	response, err := suite.executeCommandResponse(things.NewCommand(suite.namespacedID).Delete())
+	require.NoError(suite.T(), err, "could not get response")
+	assert.Equal(suite.T(), 204, response.Status, "unexpected status code")
+	suite.createTestThing(suite.thing)
+}
+
+func (suite *ldtThingSuite) TestCommandResponseRetrieveThing() {
+	response, err := suite.executeCommandResponse(things.NewCommand(suite.namespacedID).Retrieve())
+	require.NoError(suite.T(), err, "could not get response")
+	assert.Equal(suite.T(), 200, response.Status, "unexpected status code")
+	actualBody, err := suite.getThing()
+	require.NoError(suite.T(), err, "unable to get thing")
+	assert.True(suite.T(), reflect.DeepEqual(response.Value, suite.convertToMap(actualBody)))
 }
