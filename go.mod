@@ -9,6 +9,7 @@ require (
 	github.com/eclipse-kanto/kanto/integration/util v0.0.0-20230323152903-9d6570b21206
 	github.com/eclipse-kanto/suite-connector v0.1.0-M2.0.20230222081206-577d4deaa329
 	github.com/eclipse/ditto-clients-golang v0.0.0-20220225085802-cf3b306280d3
+	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.12
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
@@ -22,7 +23,6 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/google/go-tpm v0.3.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0 // indirect
