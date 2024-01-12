@@ -1,6 +1,8 @@
-![Kanto logo](https://github.com/eclipse-kanto/kanto/raw/main/logo/kanto.svg)
+[![Kanto logo](https://github.com/eclipse-kanto/kanto/raw/main/logo/kanto.svg)](https://eclipse.dev/kanto/)
 
 # Eclipse Kanto - Local Digital Twins
+
+[![Coverage](https://github.com/eclipse-kanto/local-digital-twins/wiki/coverage.svg)](#)
 
 The local digital twins is the component that sits between the cloud and the local message broker at the edge.
 Its role is to provide connectivity to the cloud, as well as to ensure that digital twin state is available on a 
