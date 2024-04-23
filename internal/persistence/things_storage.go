@@ -15,6 +15,7 @@ package persistence
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -100,6 +101,13 @@ type thingsDB struct {
 
 // NewThingsDB opens the things database.
 func NewThingsDB(path, deviceID string) (ThingsStorage, error) {
+	dir := filepath.Dir(path)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0711); err != nil {
+			return nil, errors.Wrapf(err, "error creating directory for device '%s' storage on location '%s'", deviceID, path)
+		}
+	}
+
 	database, err := NewDatabase(path)
 	if err != nil {
 		return nil, err
