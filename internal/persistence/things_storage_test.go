@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/eclipse-kanto/local-digital-twins/internal/model"
@@ -28,7 +29,7 @@ import (
 )
 
 const (
-	dbLocation  = "things_storage_test.db"
+	dbLocation  = "tmp/things_storage_test.db"
 	testThingID = "things.storage:test"
 
 	testFeatureID1 = "TestFeature1"
@@ -58,7 +59,7 @@ func (s *PersistenceTestSuite) TearDownSuite() {
 	}
 
 	defer func() {
-		if err := os.Remove(dbLocation); err != nil {
+		if err := os.RemoveAll(filepath.Dir(dbLocation)); err != nil {
 			fmt.Printf("Error on %s db test file removal %s", dbLocation, err)
 		}
 	}()
